@@ -11,7 +11,7 @@ import (
 
 func ListContact(c *gin.Context) {
 	ctx := c.Request.Context()
-	var req model.CharContactReq
+	var req model.CharContactQuery
 	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "timestamp": time.Now().UnixMilli(), "data": err.Error()})
 		return

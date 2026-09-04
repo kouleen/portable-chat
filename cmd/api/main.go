@@ -19,12 +19,11 @@ import (
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
-	router.Register(r)
-
 	r.Use(middleware.Trace())
 	r.Use(middleware.CORS())
 	r.Use(gin.Recovery())
 	r.Use(middleware.RouteRecover)
+	router.Register(r)
 
 	srv := &http.Server{
 		Addr:         ":" + "9191",

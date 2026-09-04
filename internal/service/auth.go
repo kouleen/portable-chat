@@ -10,14 +10,17 @@ import (
 	"html/template"
 	"log"
 	"math/big"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/kouleen/portable-chat/internal/model"
 	"github.com/kouleen/portable-chat/internal/repository"
+	"github.com/kouleen/portable-chat/pkg/idcli"
 	"github.com/kouleen/portable-chat/pkg/logger"
 	"github.com/kouleen/portable-chat/pkg/storecli"
 	tmp "github.com/kouleen/portable-chat/pkg/template"
+	utils "github.com/kouleen/portable-chat/pkg/util"
 	"github.com/kouleen/portable-chat/static"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -55,23 +58,35 @@ func SendCode(ctx context.Context, username string) (any, error) {
 		sb.WriteByte(chars[n.Int64()])
 	}
 	code := sb.String()
+	if err := storecli.Set(username, code, time.Duration(600)*time.Second); err != nil {
+		return nil, err
+	}
+	debugMode := os.Getenv("SEND_EMAIL") == "" || os.Getenv("SMTP_SERVER") == "" || os.Getenv("SMTP_PORT") == "" || os.Getenv("SEND_PWD") == ""
 	go func() {
+		if debugMode {
+			logger.Logger.Info("smtp env missing, skip email sending in local mode", zap.String("email", username))
+			return
+		}
 		var buf bytes.Buffer
 		if err := tpl.Execute(&buf, map[string]any{"Captcha": code}); err != nil {
 			logger.Logger.Error("SendCode Execute err", zap.Error(err))
 			return
 		}
 		tmp.SendMail(ctx, username, buf.String())
-		if err := storecli.Set(username, code, time.Duration(600)*time.Second); err != nil {
-			logger.Logger.Error("SendCode Set err", zap.Error(err))
-		}
 	}()
-	return true, nil
+	resp := map[string]any{"sent": true}
+	if debugMode {
+		resp["debugCode"] = code
+	}
+	return resp, nil
 }
 
 func Login(ctx context.Context, req *model.AuthorizationLogin) (any, error) {
 	resp, err := repository.GetAuthorizationByUsername(ctx, req.Username)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("用户名或密码错误")
+		}
 		return nil, err
 	}
 	if err = bcrypt.CompareHashAndPassword([]byte(resp.Password), []byte(req.Password)); err != nil {
@@ -92,7 +107,10 @@ func Login(ctx context.Context, req *model.AuthorizationLogin) (any, error) {
 	if err = storecli.Set(token, string(marshal), time.Duration(24)*time.Hour); err != nil {
 		return nil, err
 	}
-	return token, nil
+	return map[string]any{
+		"token": token,
+		"user":  resp.Profile(),
+	}, nil
 }
 
 func Exist(ctx context.Context, username string) (any, error) {
@@ -111,7 +129,7 @@ func CreateAuthorization(ctx context.Context, req *model.AuthorizationRegister) 
 	if req.Code != code {
 		return false, errors.New("验证码不正确！")
 	}
-	if err := storecli.Del(req.Username); err != nil {
+	if err := storecli.Del(req.Email); err != nil {
 		return nil, err
 	}
 	resp, err := repository.GetAuthorizationByUsername(ctx, req.Username)
@@ -126,7 +144,14 @@ func CreateAuthorization(ctx context.Context, req *model.AuthorizationRegister) 
 		return nil, err
 	}
 	password := string(hashPwd)
+	id, uin, err := idcli.NextID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	authorization := &model.Authorization{
+		ID:       id,
+		Uin:      uin,
 		Username: req.Username,
 		Password: password,
 		Email:    req.Email,
@@ -135,4 +160,12 @@ func CreateAuthorization(ctx context.Context, req *model.AuthorizationRegister) 
 		return nil, err
 	}
 	return true, nil
+}
+
+func Logout(ctx context.Context) error {
+	token := utils.GetAuthorizationToken(ctx)
+	if token == "" {
+		return errors.New("token is empty")
+	}
+	return storecli.Del(token)
 }

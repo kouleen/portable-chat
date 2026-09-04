@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-const subject = "LetsEncrypt证书系统"
+const subject = "Portable Chat · 实时 IM"
 
 func SendMail(ctx context.Context, targetEmail, context string) {
 	// 身份认证

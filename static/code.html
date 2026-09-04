@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Portable Chat 验证码</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #eef4ff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: #0f172a;
+    }
+
+    table {
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+
+    img {
+      border: 0;
+      display: block;
+      max-width: 100%;
+    }
+
+    .wrapper {
+      width: 100%;
+      background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%);
+      padding: 24px 12px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(37, 99, 235, 0.12);
+    }
+
+    .header {
+      padding: 36px 28px 24px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #1e3a8a 100%);
+      color: #ffffff;
+    }
+
+    .brand {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin: 0 0 10px;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .content {
+      padding: 30px 28px 16px;
+    }
+
+    .title {
+      margin: 0 0 12px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .desc {
+      margin: 0 0 22px;
+      font-size: 15px;
+      line-height: 1.8;
+      color: #475569;
+    }
+
+    .code-box {
+      margin: 0 0 22px;
+      padding: 18px 16px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+      border: 1px solid #bfdbfe;
+      text-align: center;
+    }
+
+    .code-label {
+      margin: 0 0 10px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: #1d4ed8;
+    }
+
+    .code {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: 0.32em;
+      color: #0f172a;
+      text-indent: 0.32em;
+      word-break: break-all;
+    }
+
+    .tips {
+      margin: 0;
+      padding-left: 18px;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    .footer {
+      padding: 16px 28px 30px;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #94a3b8;
+    }
+
+    .notice {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #64748b;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .wrapper {
+        padding: 12px 0;
+      }
+
+      .container {
+        border-radius: 18px;
+      }
+
+      .header,
+      .content,
+      .footer {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+      }
+
+      .brand {
+        font-size: 22px;
+      }
+
+      .title {
+        font-size: 20px;
+      }
+
+      .code {
+        font-size: 28px;
+        letter-spacing: 0.24em;
+        text-indent: 0.24em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <table role="presentation" width="100%">
+      <tr>
+        <td align="center">
+          <table role="presentation" class="container" width="100%">
+            <tr>
+              <td class="header">
+                <p class="brand">Portable Chat</p>
+                <p class="subtitle">安全登录与注册验证</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="content">
+                <h1 class="title">您的邮箱验证码已送达</h1>
+                <p class="desc">
+                  您正在使用 Portable Chat 进行账号注册或登录验证。请在页面中输入下面的 6 位验证码完成操作。
+                </p>
+
+                <div class="code-box">
+                  <p class="code-label">VERIFICATION CODE</p>
+                  <p class="code">{{ .Captcha }}</p>
+                </div>
+
+                <ul class="tips">
+                  <li>验证码 10 分钟内有效，请尽快完成验证。</li>
+                  <li>请勿将验证码透露给任何人，工作人员不会向您索取此验证码。</li>
+                  <li>如果这不是您的操作，请忽略此邮件。</li>
+                </ul>
+
+                <div class="notice">
+                  这是一封系统自动发送的安全邮件，请勿直接回复。
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="footer">
+                © Portable Chat · 简洁、安全、实时的 Web IM 体验
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

@@ -81,5 +81,19 @@ func Register(c *gin.Context) {
 
 func Info(c *gin.Context) {
 	ctx := c.Request.Context()
-	c.JSON(http.StatusOK, gin.H{"success": true, "timestamp": time.Now().UnixMilli(), "data": utils.GetAuthorization(ctx)})
+	user := utils.GetAuthorization(ctx)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "timestamp": time.Now().UnixMilli(), "data": "Unauthorized"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "timestamp": time.Now().UnixMilli(), "data": user.Profile()})
+}
+
+func Logout(c *gin.Context) {
+	ctx := c.Request.Context()
+	if err := service.Logout(ctx); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "timestamp": time.Now().UnixMilli(), "data": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "timestamp": time.Now().UnixMilli(), "data": true})
 }

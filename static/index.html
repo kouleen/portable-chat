@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Portable Chat</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef4ff;
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-solid: #ffffff;
+      --surface-soft: #f8fbff;
+      --line: #dbe7ff;
+      --line-strong: #bfd4ff;
+      --text: #0f172a;
+      --text-soft: #475569;
+      --text-faint: #64748b;
+      --primary: #2563eb;
+      --primary-strong: #1d4ed8;
+      --primary-soft: #e8f0ff;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --success-soft: #ecfdf5;
+      --shadow-xl: 0 28px 70px rgba(37, 99, 235, 0.14);
+      --shadow-md: 0 14px 30px rgba(15, 23, 42, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 28%),
+        radial-gradient(circle at right 20%, rgba(99, 102, 241, 0.12), transparent 22%),
+        linear-gradient(180deg, #f7faff 0%, #eef4ff 100%);
+      color: var(--text);
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    button, input, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .hidden { display: none !important; }
+
+    .page {
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-shell,
+    .app-shell {
+      width: min(1180px, 100%);
+      background: var(--surface);
+      backdrop-filter: blur(22px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: var(--shadow-xl);
+      border-radius: 32px;
+      overflow: hidden;
+    }
+
+    .auth-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, 460px);
+      min-height: min(780px, calc(100vh - 48px));
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 251, 255, 0.94));
+    }
+
+    .hero {
+      position: relative;
+      padding: 56px 56px 48px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2), transparent 22%),
+        radial-gradient(circle at 80% 30%, rgba(191, 219, 254, 0.24), transparent 24%),
+        linear-gradient(145deg, #1d4ed8 0%, #2563eb 45%, #1e3a8a 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 28px;
+    }
+
+    .hero-badge {
+      align-self: flex-start;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: clamp(34px, 4vw, 52px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-copy {
+      max-width: 560px;
+    }
+
+    .hero-copy p {
+      margin: 0 0 14px;
+      font-size: 16px;
+      line-height: 1.85;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .metric {
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10px);
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 24px;
+    }
+
+    .metric span {
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .auth-panel {
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(248, 251, 255, 0.85), rgba(255, 255, 255, 0.92));
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      border-radius: var(--radius-xl);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(219, 231, 255, 0.9);
+      box-shadow: var(--shadow-md);
+      padding: 18px;
+    }
+
+    .auth-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 18px;
+      background: #eff5ff;
+      margin-bottom: 20px;
+    }
+
+    .switch-btn {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--text-faint);
+      font-weight: 700;
+    }
+
+    .switch-btn.active {
+      background: #ffffff;
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .auth-status {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      background: var(--primary-soft);
+      color: var(--text-soft);
+      border: 1px solid var(--line);
+    }
+
+    .auth-status.error {
+      color: #991b1b;
+      background: var(--danger-soft);
+      border-color: #fecaca;
+    }
+
+    .toast-stack {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 30;
+      display: grid;
+      gap: 12px;
+      width: min(380px, calc(100vw - 24px));
+      pointer-events: none;
+    }
+
+    .toast {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: start;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      color: #fff;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+      backdrop-filter: blur(18px);
+      transform: translateX(110%);
+      opacity: 0;
+      transition: transform 0.28s ease, opacity 0.28s ease;
+      pointer-events: auto;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .toast.hide {
+      transform: translateX(110%);
+      opacity: 0;
+    }
+
+    .toast.error {
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.94), rgba(185, 28, 28, 0.96));
+    }
+
+    .toast.success {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.94), rgba(4, 120, 87, 0.96));
+    }
+
+    .toast.info {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.94), rgba(29, 78, 216, 0.96));
+    }
+
+    .toast-icon {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .toast-body {
+      min-width: 0;
+    }
+
+    .toast-title {
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .toast-message {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.65;
+      color: rgba(255, 255, 255, 0.92);
+      word-break: break-word;
+    }
+
+    .toast-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      font-size: 16px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .auth-pane {
+      display: none;
+    }
+
+    .auth-pane.active {
+      display: block;
+      animation: fadeIn 0.18s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-heading {
+      margin-bottom: 18px;
+    }
+
+    .auth-heading h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .auth-heading p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text-faint);
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+
+    .field input,
+    .toolbar input,
+    .composer textarea {
+      width: 100%;
+      border: 1px solid #d7e3fb;
+      background: #f9fbff;
+      color: var(--text);
+      border-radius: 16px;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .field input,
+    .toolbar input {
+      padding: 14px 16px;
+    }
+
+    .field input:focus,
+    .toolbar input:focus,
+    .composer textarea:focus {
+      border-color: #8db5ff;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .btn {
+      min-height: 48px;
+      padding: 13px 18px;
+      border-radius: 16px;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 18px 32px rgba(37, 99, 235, 0.28);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: #edf4ff;
+      border: 1px solid var(--line);
+    }
+
+    .btn-ghost {
+      color: var(--text-soft);
+      background: #fff;
+      border: 1px solid #d7e3fb;
+    }
+
+    .tip {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #edf7ff;
+      border: 1px solid #cfe5ff;
+      color: #0f4c81;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .auth-footer {
+      margin-top: 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-faint);
+      text-align: center;
+    }
+
+    .auth-footer button {
+      margin-left: 4px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .app-shell {
+      height: calc(100vh - 48px);
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .sidebar {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(219, 231, 255, 0.9);
+      background: linear-gradient(180deg, rgba(247, 250, 255, 0.95), rgba(240, 246, 255, 0.95));
+    }
+
+    .sidebar-header,
+    .chat-header {
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(219, 231, 255, 0.9);
+      backdrop-filter: blur(16px);
+    }
+
+    .sidebar-header h3,
+    .chat-header h3 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .toolbar button {
+      flex-shrink: 0;
+    }
+
+    .small {
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text-faint);
+    }
+
+    .contact-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .contact-item {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid transparent;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+      cursor: pointer;
+    }
+
+    .contact-item.active {
+      border-color: #9fc2ff;
+      background: linear-gradient(180deg, #ffffff, #eef5ff);
+      box-shadow: 0 16px 28px rgba(37, 99, 235, 0.12);
+    }
+
+    .contact-name {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .contact-preview,
+    .contact-meta {
+      font-size: 12px;
+      color: var(--text-faint);
+      line-height: 1.65;
+    }
+
+    .badge {
+      min-width: 22px;
+      height: 22px;
+      padding: 0 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 10px 20px rgba(239, 68, 68, 0.22);
+    }
+
+    .chat-panel {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 251, 255, 0.95));
+    }
+
+    .chat-header-top {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chat-subtitle {
+      color: var(--text-faint);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 24px;
+      display: grid;
+      align-content: start;
+      grid-auto-rows: max-content;
+      gap: 14px;
+      overscroll-behavior: contain;
+      background:
+        radial-gradient(circle at top, rgba(191, 219, 254, 0.28), transparent 30%),
+        linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    }
+
+    .empty {
+      margin: auto;
+      max-width: 360px;
+      text-align: center;
+      color: var(--text-faint);
+      line-height: 1.9;
+    }
+
+    .message {
+      max-width: min(76%, 520px);
+      padding: 14px 16px;
+      border-radius: 20px 20px 20px 8px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 14px 26px rgba(15, 23, 42, 0.05);
+      line-height: 1.75;
+      word-break: break-word;
+    }
+
+    .message.mine {
+      margin-left: auto;
+      border-radius: 20px 20px 8px 20px;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      box-shadow: 0 18px 30px rgba(37, 99, 235, 0.22);
+    }
+
+    .message-meta {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      font-size: 12px;
+      opacity: 0.82;
+    }
+
+    .composer {
+      flex-shrink: 0;
+      padding: 18px 20px calc(18px + env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: end;
+      background: rgba(255, 255, 255, 0.92);
+      border-top: 1px solid rgba(219, 231, 255, 0.9);
+      backdrop-filter: blur(16px);
+    }
+
+    .composer textarea {
+      min-height: 96px;
+      resize: none;
+      padding: 16px 18px;
+    }
+
+    .composer-actions {
+      min-width: 110px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mobile-only {
+      display: none;
+    }
+
+    .desktop-only {
+      display: inline-flex;
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      background: #eef4ff;
+      border: 1px solid var(--line);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
+      }
+
+      .page {
+        padding: 16px;
+      }
+
+      .auth-shell {
+        min-height: auto;
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 36px 24px 28px;
+      }
+
+      .hero-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-panel {
+        padding: 18px;
+      }
+
+      .app-shell {
+        height: calc(100vh - 32px);
+        min-height: 0;
+        grid-template-columns: 1fr;
+        position: relative;
+      }
+
+      .sidebar {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: min(100%, 360px);
+        z-index: 4;
+        border-right: 1px solid rgba(219, 231, 255, 0.95);
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+      }
+
+      .app-shell.sidebar-open .sidebar {
+        transform: translateX(0);
+      }
+
+      .chat-panel {
+        min-width: 0;
+        min-height: 0;
+      }
+
+      .chat-header-top {
+        display: flex;
+      }
+
+      .mobile-only {
+        display: inline-flex;
+      }
+
+      .desktop-only {
+        display: none;
+      }
+
+      .toolbar {
+        flex-wrap: wrap;
+      }
+
+      .toolbar input {
+        min-width: 0;
+        flex-basis: 100%;
+      }
+
+      .composer {
+        grid-template-columns: 1fr;
+      }
+
+      .composer-actions {
+        min-width: 0;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .message {
+        max-width: 88%;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .toast-stack {
+        top: 10px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+      }
+
+      .page {
+        padding: 0;
+      }
+
+      .auth-shell,
+      .app-shell {
+        width: 100%;
+        min-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        border: 0;
+      }
+
+      .auth-panel,
+      .hero {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .hero {
+        padding-top: 28px;
+        padding-bottom: 24px;
+      }
+
+      .hero h1 {
+        font-size: 34px;
+      }
+
+      .auth-card {
+        max-width: none;
+        padding: 14px;
+        border-radius: 24px 24px 0 0;
+      }
+
+      .auth-heading h2 {
+        font-size: 24px;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-header,
+      .chat-header {
+        padding: 16px;
+      }
+
+      .messages {
+        padding: 16px;
+      }
+
+      .composer {
+        padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+      }
+
+      .composer-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .message {
+        max-width: 92%;
+        padding: 13px 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="page" id="authPage">
+    <div class="auth-shell">
+      <section class="hero">
+        <div>
+          <div class="hero-badge">Portable Chat · 实时 IM</div>
+          <div class="hero-copy">
+            <h1>把登录体验做得更轻，让聊天更顺。</h1>
+            <p>这是一个类似 QQ 的轻量 IM Web 项目，支持注册、登录登出、联系人查询、进入聊天房间、30 天历史消息和已读状态。</p>
+            <p>本地开发时如果没有配置 SMTP，发送验证码接口会直接返回 `debugCode`，方便你快速自测注册流程。</p>
+          </div>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric">
+            <strong>WebSocket</strong>
+            <span>进入联系人会话后，消息实时推送，状态即时同步。</span>
+          </div>
+          <div class="metric">
+            <strong>30 天</strong>
+            <span>历史消息默认只展示最近 30 天，列表更干净，加载更轻。</span>
+          </div>
+          <div class="metric">
+            <strong>已读回执</strong>
+            <span>对方查看消息后，发送侧会自动更新为已读。</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="auth-panel">
+        <div class="auth-card">
+          <div class="auth-switch">
+            <button id="showLoginBtn" class="switch-btn active" type="button">登录</button>
+            <button id="showRegisterBtn" class="switch-btn" type="button">注册</button>
+          </div>
+
+          <div id="authStatus" class="auth-status hidden"></div>
+
+          <div id="loginPane" class="auth-pane active">
+            <div class="auth-heading">
+              <h2>欢迎回来</h2>
+              <p>登录后即可查看联系人、进入聊天房间并同步最近 30 天消息。</p>
+            </div>
+            <div class="field">
+              <label for="loginUsername">用户名</label>
+              <input id="loginUsername" placeholder="请输入用户名" autocomplete="username">
+            </div>
+            <div class="field">
+              <label for="loginPassword">密码</label>
+              <input id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password">
+            </div>
+            <button id="loginBtn" class="btn btn-primary" type="button">立即登录</button>
+            <div class="auth-footer">
+              还没有账号？
+              <button id="switchToRegisterTextBtn" type="button">去注册</button>
+            </div>
+          </div>
+
+          <div id="registerPane" class="auth-pane">
+            <div class="auth-heading">
+              <h2>创建账号</h2>
+              <p>注册完成后就能开始联系人聊天。验证码默认有效期 10 分钟。</p>
+            </div>
+            <div class="field">
+              <label for="registerUsername">用户名</label>
+              <input id="registerUsername" placeholder="例如 alice" autocomplete="username">
+            </div>
+            <div class="field">
+              <label for="registerPassword">密码</label>
+              <input id="registerPassword" type="password" placeholder="请输入密码" autocomplete="new-password">
+            </div>
+            <div class="field">
+              <label for="registerEmail">邮箱</label>
+              <input id="registerEmail" placeholder="例如 alice@example.com" autocomplete="email">
+            </div>
+            <div class="row">
+              <div class="field" style="margin-bottom:0;">
+                <label for="registerCode">验证码</label>
+                <input id="registerCode" placeholder="6 位验证码" inputmode="numeric">
+              </div>
+              <button id="sendCodeBtn" class="btn btn-secondary" type="button">发送验证码</button>
+            </div>
+            <div id="debugCodeBox" class="tip hidden"></div>
+            <button id="registerBtn" class="btn btn-primary" type="button">完成注册</button>
+            <div class="auth-footer">
+              已经有账号？
+              <button id="switchToLoginTextBtn" type="button">去登录</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="page hidden" id="appPage">
+    <div class="app-shell" id="appShell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h3 id="currentUserName">未登录</h3>
+          <div class="small" id="currentUserMeta"></div>
+          <div class="toolbar">
+            <input id="searchKeyword" placeholder="搜索联系人">
+            <button id="refreshContactsBtn" class="btn btn-ghost desktop-only" type="button">刷新</button>
+            <button id="closeSidebarBtn" class="icon-btn mobile-only" type="button">×</button>
+          </div>
+          <div class="toolbar">
+            <button id="logoutBtn" class="btn btn-secondary" type="button">登出</button>
+          </div>
+        </div>
+        <div id="contactList" class="contact-list"></div>
+      </aside>
+
+      <section class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-header-top">
+            <button id="openSidebarBtn" class="icon-btn mobile-only" type="button">≡</button>
+            <button id="backToContactsBtn" class="icon-btn mobile-only hidden" type="button">←</button>
+          </div>
+          <h3 id="chatTitle">选择一个联系人开始聊天</h3>
+          <div class="chat-subtitle" id="chatSubtitle">历史消息默认展示近 30 天</div>
+        </div>
+        <div id="messageList" class="messages">
+          <div class="empty">登录后可以选择联系人进入聊天房间。</div>
+        </div>
+        <div class="composer">
+          <textarea id="messageInput" placeholder="输入消息，按 Enter 发送，Shift + Enter 换行"></textarea>
+          <div class="composer-actions">
+            <button id="sendMessageBtn" class="btn btn-primary" type="button">发送</button>
+            <div class="small" id="connectionStatus">未连接</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      token: localStorage.getItem("portable-chat-token") || "",
+      user: null,
+      contacts: [],
+      activeContact: null,
+      messages: [],
+      ws: null,
+      sse: null,
+      authRedirecting: false,
+      contactsRefreshTimer: null,
+      audioContext: null
+    };
+
+    const els = {
+      authPage: document.getElementById("authPage"),
+      appPage: document.getElementById("appPage"),
+      appShell: document.getElementById("appShell"),
+      toastStack: document.getElementById("toastStack"),
+      authStatus: document.getElementById("authStatus"),
+      debugCodeBox: document.getElementById("debugCodeBox"),
+      showLoginBtn: document.getElementById("showLoginBtn"),
+      showRegisterBtn: document.getElementById("showRegisterBtn"),
+      switchToRegisterTextBtn: document.getElementById("switchToRegisterTextBtn"),
+      switchToLoginTextBtn: document.getElementById("switchToLoginTextBtn"),
+      loginPane: document.getElementById("loginPane"),
+      registerPane: document.getElementById("registerPane"),
+      loginUsername: document.getElementById("loginUsername"),
+      loginPassword: document.getElementById("loginPassword"),
+      registerUsername: document.getElementById("registerUsername"),
+      registerPassword: document.getElementById("registerPassword"),
+      registerEmail: document.getElementById("registerEmail"),
+      registerCode: document.getElementById("registerCode"),
+      currentUserName: document.getElementById("currentUserName"),
+      currentUserMeta: document.getElementById("currentUserMeta"),
+      searchKeyword: document.getElementById("searchKeyword"),
+      contactList: document.getElementById("contactList"),
+      chatTitle: document.getElementById("chatTitle"),
+      chatSubtitle: document.getElementById("chatSubtitle"),
+      messageList: document.getElementById("messageList"),
+      messageInput: document.getElementById("messageInput"),
+      connectionStatus: document.getElementById("connectionStatus"),
+      openSidebarBtn: document.getElementById("openSidebarBtn"),
+      closeSidebarBtn: document.getElementById("closeSidebarBtn"),
+      backToContactsBtn: document.getElementById("backToContactsBtn")
+    };
+
+    function showToast(message, type = "info", title = "") {
+      const toast = document.createElement("div");
+      const toastTitle = title || (type === "error" ? "请求失败" : type === "success" ? "操作成功" : "提示");
+      const toastIcon = type === "error" ? "!" : type === "success" ? "✓" : "i";
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <div class="toast-icon">${toastIcon}</div>
+        <div class="toast-body">
+          <p class="toast-title">${escapeHtml(toastTitle)}</p>
+          <p class="toast-message">${escapeHtml(message)}</p>
+        </div>
+        <button class="toast-close" type="button" aria-label="关闭">×</button>
+      `;
+
+      const removeToast = () => {
+        toast.classList.remove("show");
+        toast.classList.add("hide");
+        window.setTimeout(() => toast.remove(), 280);
+      };
+
+      toast.querySelector(".toast-close").addEventListener("click", removeToast);
+      els.toastStack.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add("show"));
+      window.setTimeout(removeToast, type === "error" ? 4200 : 3200);
+    }
+
+    function clearAuthStatus() {
+      els.authStatus.classList.add("hidden");
+      els.debugCodeBox.classList.add("hidden");
+    }
+
+    function switchAuthTab(mode) {
+      const showLogin = mode === "login";
+      clearAuthStatus();
+      els.showLoginBtn.classList.toggle("active", showLogin);
+      els.showRegisterBtn.classList.toggle("active", !showLogin);
+      els.loginPane.classList.toggle("active", showLogin);
+      els.registerPane.classList.toggle("active", !showLogin);
+    }
+
+    function setSidebarOpen(open) {
+      els.appShell.classList.toggle("sidebar-open", open);
+    }
+
+    function syncMobileChatState() {
+      const mobile = window.innerWidth <= 980;
+      const hasContact = !!state.activeContact;
+      els.backToContactsBtn.classList.toggle("hidden", !mobile || !hasContact);
+      if (!mobile) {
+        setSidebarOpen(false);
+      }
+    }
+
+    function normalizeId(value) {
+      return String(value ?? "");
+    }
+
+    function isAuthExpiredMessage(message = "") {
+      const normalized = String(message).toLowerCase();
+      return normalized.includes("invalid token") || normalized.includes("unauthorized") || normalized.includes("token");
+    }
+
+    function resetClientSession() {
+      if (state.ws) {
+        state.ws.close();
+      }
+      if (state.sse) {
+        state.sse.close();
+      }
+      if (state.contactsRefreshTimer) {
+        window.clearTimeout(state.contactsRefreshTimer);
+      }
+      state.ws = null;
+      state.sse = null;
+      state.user = null;
+      state.activeContact = null;
+      state.messages = [];
+      state.contacts = [];
+      state.contactsRefreshTimer = null;
+      els.connectionStatus.textContent = "未连接";
+      saveToken("");
+      renderContacts();
+      renderMessages();
+      switchAuthTab("login");
+      setScreen(false);
+    }
+
+    function handleSessionExpired(message = "登录状态已失效，请重新登录。") {
+      if (state.authRedirecting) {
+        return;
+      }
+      state.authRedirecting = true;
+      resetClientSession();
+      showToast(message, "error", "会话过期");
+      window.setTimeout(() => {
+        state.authRedirecting = false;
+      }, 800);
+    }
+
+    function notifyError(error, title = "请求失败") {
+      if (error && error.handled) {
+        return;
+      }
+      showToast(error && error.message ? error.message : "请求失败", "error", title);
+    }
+
+    function ensureAudioContext() {
+      if (state.audioContext || typeof window.AudioContext === "undefined") {
+        return;
+      }
+      state.audioContext = new window.AudioContext();
+    }
+
+    async function unlockAudioContext() {
+      ensureAudioContext();
+      if (!state.audioContext) {
+        return;
+      }
+      if (state.audioContext.state === "suspended") {
+        try {
+          await state.audioContext.resume();
+        } catch (_) {}
+      }
+    }
+
+    function playNotificationSound() {
+      ensureAudioContext();
+      if (!state.audioContext || state.audioContext.state !== "running") {
+        return;
+      }
+
+      const now = state.audioContext.currentTime;
+      const oscillator = state.audioContext.createOscillator();
+      const gain = state.audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, now);
+      oscillator.frequency.exponentialRampToValueAtTime(660, now + 0.12);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.05, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+      oscillator.connect(gain);
+      gain.connect(state.audioContext.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.22);
+    }
+
+    function queueContactsRefresh() {
+      if (!state.token) {
+        return;
+      }
+      if (state.contactsRefreshTimer) {
+        return;
+      }
+      state.contactsRefreshTimer = window.setTimeout(() => {
+        state.contactsRefreshTimer = null;
+        loadContacts(els.searchKeyword.value.trim()).catch(error => notifyError(error, "同步失败"));
+      }, 120);
+    }
+
+    function getApiError(payload) {
+      if (!payload) return "请求失败";
+      if (payload.success === false) {
+        return typeof payload.data === "string" ? payload.data : "请求失败";
+      }
+      if (typeof payload.code === "number" && payload.code !== 200 && payload.code !== 0) {
+        return payload.message || "请求失败";
+      }
+      return "";
+    }
+
+    async function request(path, options = {}) {
+      const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+      if (state.token && options.auth !== false) {
+        headers.Authorization = `Bearer ${state.token}`;
+      }
+      const response = await fetch(path, {
+        method: options.method || "GET",
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+      const payload = await response.json().catch(() => null);
+      const error = getApiError(payload);
+      if (error) {
+        const requestError = new Error(error);
+        if (options.auth !== false && isAuthExpiredMessage(error)) {
+          requestError.handled = true;
+          handleSessionExpired("登录已过期或已失效，请重新登录。");
+        }
+        throw requestError;
+      }
+      return payload ? payload.data : null;
+    }
+
+    function saveToken(token) {
+      state.token = token || "";
+      if (state.token) {
+        localStorage.setItem("portable-chat-token", state.token);
+      } else {
+        localStorage.removeItem("portable-chat-token");
+      }
+    }
+
+    function connectSSE() {
+      if (!state.token || typeof window.EventSource === "undefined") {
+        return;
+      }
+      if (state.sse) {
+        state.sse.close();
+      }
+
+      const source = new EventSource(`/portable/root/events?access_token=${encodeURIComponent(state.token)}`);
+      state.sse = source;
+
+      source.addEventListener("incoming_message", event => {
+        const payload = JSON.parse(event.data || "{}");
+        queueContactsRefresh();
+
+        const sameActiveContact = state.activeContact && normalizeId(state.activeContact.id) === normalizeId(payload.senderId);
+        const hasActiveRealtimeChat = sameActiveContact && state.ws && state.ws.readyState === WebSocket.OPEN;
+        if (!hasActiveRealtimeChat) {
+          showToast(`来自 ${payload.contactName || "新联系人"} 的新消息`, "info", "收到新消息");
+          playNotificationSound();
+        }
+      });
+
+      source.addEventListener("contacts_refresh", () => {
+        queueContactsRefresh();
+      });
+
+      source.addEventListener("read_receipt", event => {
+        const payload = JSON.parse(event.data || "{}");
+        const receipt = payload.receipt;
+        if (receipt && state.activeContact && normalizeId(state.activeContact.id) === normalizeId(payload.readerId)) {
+          const ids = new Set((receipt.messageIds || []).map(normalizeId));
+          state.messages = state.messages.map(message => {
+            if (ids.has(normalizeId(message.id))) {
+              return Object.assign({}, message, { isRead: true, readAt: receipt.readAt });
+            }
+            return message;
+          });
+          renderMessages();
+        }
+        queueContactsRefresh();
+      });
+
+      source.onerror = () => {
+        if (!state.token || state.authRedirecting) {
+          return;
+        }
+      };
+    }
+
+    function setScreen(loggedIn) {
+      els.authPage.classList.toggle("hidden", loggedIn);
+      els.appPage.classList.toggle("hidden", !loggedIn);
+      if (loggedIn && window.innerWidth <= 980) {
+        setSidebarOpen(!state.activeContact);
+      } else {
+        setSidebarOpen(false);
+      }
+      syncMobileChatState();
+    }
+
+    function formatTime(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleString("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderContacts() {
+      if (!state.contacts.length) {
+        els.contactList.innerHTML = '<div class="empty">还没有可展示的联系人。先注册两个账号试试。</div>';
+        return;
+      }
+      els.contactList.innerHTML = state.contacts.map(contact => {
+        const active = state.activeContact && normalizeId(state.activeContact.id) === normalizeId(contact.id);
+        return `
+          <div class="contact-item ${active ? "active" : ""}" data-contact-id="${escapeHtml(contact.id)}">
+            <div class="contact-name">
+              <span>${escapeHtml(contact.contactName)}</span>
+              ${contact.unreadCount > 0 ? `<span class="badge">${contact.unreadCount}</span>` : ""}
+            </div>
+            <div class="contact-preview">${escapeHtml(contact.lastMessage || "还没有聊天记录")}</div>
+            <div class="contact-meta">${escapeHtml(contact.uin || "")}${contact.lastMessageAt ? ` · ${formatTime(contact.lastMessageAt)}` : ""}</div>
+          </div>
+        `;
+      }).join("");
+
+      els.contactList.querySelectorAll(".contact-item").forEach(item => {
+        item.addEventListener("click", () => {
+          const contact = state.contacts.find(entry => normalizeId(entry.id) === item.dataset.contactId);
+          if (contact) {
+            selectContact(contact);
+          }
+        });
+      });
+    }
+
+    function renderMessages() {
+      if (!state.activeContact) {
+        els.messageList.innerHTML = '<div class="empty">选择一个联系人开始聊天。</div>';
+        return;
+      }
+      if (!state.messages.length) {
+        els.messageList.innerHTML = '<div class="empty">近 30 天还没有消息，发一句试试。</div>';
+        return;
+      }
+      els.messageList.innerHTML = state.messages.map(message => {
+        const mine = normalizeId(message.senderId) === normalizeId(state.user.id);
+        return `
+          <div class="message ${mine ? "mine" : ""}">
+            <div>${escapeHtml(message.content)}</div>
+            <div class="message-meta">
+              <span>${formatTime(message.createTime)}</span>
+              ${mine ? `<span>${message.isRead ? "已读" : "未读"}</span>` : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+      els.messageList.scrollTop = els.messageList.scrollHeight;
+    }
+
+    function scrollMessagesToBottom() {
+      requestAnimationFrame(() => {
+        els.messageList.scrollTop = els.messageList.scrollHeight;
+      });
+    }
+
+    function updateHeader() {
+      if (!state.user) return;
+      els.currentUserName.textContent = state.user.username;
+      els.currentUserMeta.textContent = `ID: ${state.user.id} · UIN: ${state.user.uin || ""} · ${state.user.email}`;
+      if (state.activeContact) {
+        els.chatTitle.textContent = state.activeContact.contactName;
+        els.chatSubtitle.textContent = `联系人 UIN: ${state.activeContact.uin || ""} · 展示近 30 天历史消息`;
+      } else {
+        els.chatTitle.textContent = "选择一个联系人开始聊天";
+        els.chatSubtitle.textContent = "历史消息默认展示近 30 天";
+      }
+      syncMobileChatState();
+    }
+
+    async function loadProfile() {
+      state.user = await request("/portable/root/info");
+      updateHeader();
+    }
+
+    async function loadContacts(keyword = "") {
+      const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
+      state.contacts = await request(`/portable/root/contacts${query}`);
+      if (state.activeContact) {
+        state.activeContact = state.contacts.find(item => normalizeId(item.id) === normalizeId(state.activeContact.id)) || state.activeContact;
+      }
+      renderContacts();
+      updateHeader();
+    }
+
+    async function loadHistory(contactId) {
+      const data = await request(`/portable/root/history?contactId=${encodeURIComponent(contactId)}&days=30&limit=200`);
+      state.messages = data.messages || [];
+      if (data.contact) {
+        const matched = state.contacts.find(item => normalizeId(item.id) === normalizeId(data.contact.id));
+        if (matched) {
+          state.activeContact = matched;
+        }
+      }
+      renderMessages();
+      await loadContacts(els.searchKeyword.value.trim());
+    }
+
+    function connectWs() {
+      if (state.ws) {
+        state.ws.close();
+        state.ws = null;
+      }
+      if (!state.activeContact || !state.token) {
+        els.connectionStatus.textContent = "未连接";
+        return;
+      }
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      const url = `${protocol}//${location.host}/portable/root/ws?contactId=${encodeURIComponent(state.activeContact.id)}&access_token=${encodeURIComponent(state.token)}`;
+      const ws = new WebSocket(url);
+      state.ws = ws;
+
+      ws.addEventListener("open", () => {
+        els.connectionStatus.textContent = "已连接";
+      });
+
+      ws.addEventListener("message", async event => {
+        const payload = JSON.parse(event.data);
+        if (payload.type === "connected") {
+          els.connectionStatus.textContent = "实时连接中";
+          return;
+        }
+        if (payload.type === "message" && payload.data) {
+          const message = payload.data;
+          const senderMatches = normalizeId(message.senderId) === normalizeId(state.activeContact.id);
+          const receiverMatches = normalizeId(message.receiverId) === normalizeId(state.activeContact.id);
+          if (senderMatches || receiverMatches) {
+            if (!state.messages.some(item => normalizeId(item.id) === normalizeId(message.id))) {
+              state.messages.push(message);
+              renderMessages();
+              scrollMessagesToBottom();
+            }
+          }
+          await loadContacts(els.searchKeyword.value.trim());
+          if (senderMatches) {
+            ws.send(JSON.stringify({ type: "read" }));
+          }
+          return;
+        }
+        if (payload.type === "read" && payload.data) {
+          const ids = new Set((payload.data.messageIds || []).map(normalizeId));
+          state.messages = state.messages.map(message => {
+            if (ids.has(normalizeId(message.id))) {
+              return Object.assign({}, message, { isRead: true, readAt: payload.data.readAt });
+            }
+            return message;
+          });
+          renderMessages();
+          await loadContacts(els.searchKeyword.value.trim());
+          return;
+        }
+        if (payload.type === "error") {
+          const message = payload.data && payload.data.message ? payload.data.message : "连接异常";
+          els.connectionStatus.textContent = message;
+          if (isAuthExpiredMessage(message)) {
+            handleSessionExpired("聊天凭证已失效，请重新登录。");
+            return;
+          }
+          showToast(message, "error", "聊天异常");
+        }
+      });
+
+      ws.addEventListener("close", () => {
+        if (state.ws === ws) {
+          els.connectionStatus.textContent = "连接已关闭";
+          if (state.activeContact) {
+            showToast("聊天连接已关闭，请重新进入会话或刷新页面。", "error", "连接断开");
+          }
+        }
+      });
+    }
+
+    async function selectContact(contact) {
+      state.activeContact = contact;
+      state.messages = [];
+      renderContacts();
+      updateHeader();
+      renderMessages();
+      if (window.innerWidth <= 980) {
+        setSidebarOpen(false);
+      }
+      await loadHistory(contact.id);
+      connectWs();
+    }
+
+    async function login() {
+      clearAuthStatus();
+      const data = await request("/portable/login", {
+        method: "POST",
+        auth: false,
+        body: {
+          username: els.loginUsername.value.trim(),
+          password: els.loginPassword.value
+        }
+      });
+      saveToken(data.token);
+      state.authRedirecting = false;
+      state.user = data.user;
+      showToast(`欢迎回来，${data.user.username}`, "success", "登录成功");
+      setScreen(true);
+      updateHeader();
+      connectSSE();
+      await loadContacts();
+    }
+
+    async function sendCode() {
+      clearAuthStatus();
+      const email = els.registerEmail.value.trim();
+      const data = await request(`/portable/sendCode?email=${encodeURIComponent(email)}`, { auth: false });
+      showToast("验证码已发送，请查看邮箱或页面中的调试验证码。", "success", "发送成功");
+      if (data && data.debugCode) {
+        els.debugCodeBox.classList.remove("hidden");
+        els.debugCodeBox.textContent = `本地调试验证码：${data.debugCode}`;
+      }
+    }
+
+    async function register() {
+      clearAuthStatus();
+      await request("/portable/register", {
+        method: "POST",
+        auth: false,
+        body: {
+          username: els.registerUsername.value.trim(),
+          password: els.registerPassword.value,
+          email: els.registerEmail.value.trim(),
+          code: els.registerCode.value.trim()
+        }
+      });
+      showToast("注册成功，现在可以直接登录。", "success", "欢迎加入");
+      switchAuthTab("login");
+      els.loginUsername.value = els.registerUsername.value.trim();
+      els.loginPassword.focus();
+    }
+
+    async function logout() {
+      try {
+        await request("/portable/root/logout", { method: "POST" });
+      } catch (_) {}
+      if (state.ws) state.ws.close();
+      if (state.sse) state.sse.close();
+      state.ws = null;
+      state.sse = null;
+      state.user = null;
+      state.activeContact = null;
+      state.messages = [];
+      state.contacts = [];
+      saveToken("");
+      setScreen(false);
+      renderContacts();
+      renderMessages();
+      switchAuthTab("login");
+    }
+
+    async function sendMessage() {
+      const content = els.messageInput.value.trim();
+      if (!content) return;
+      if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
+        throw new Error("当前聊天房间还未建立连接");
+      }
+      state.ws.send(JSON.stringify({ type: "message", content }));
+      els.messageInput.value = "";
+      scrollMessagesToBottom();
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      login().catch(error => notifyError(error, "登录失败"));
+    });
+    document.getElementById("sendCodeBtn").addEventListener("click", () => {
+      sendCode().catch(error => notifyError(error, "发送失败"));
+    });
+    document.getElementById("registerBtn").addEventListener("click", () => {
+      register().catch(error => notifyError(error, "注册失败"));
+    });
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      logout().catch(() => {});
+    });
+    document.getElementById("refreshContactsBtn").addEventListener("click", () => {
+      loadContacts(els.searchKeyword.value.trim()).catch(error => notifyError(error, "刷新失败"));
+    });
+    document.getElementById("sendMessageBtn").addEventListener("click", () => {
+      sendMessage().catch(error => notifyError(error, "发送失败"));
+    });
+
+    els.showLoginBtn.addEventListener("click", () => switchAuthTab("login"));
+    els.showRegisterBtn.addEventListener("click", () => switchAuthTab("register"));
+    els.switchToRegisterTextBtn.addEventListener("click", () => switchAuthTab("register"));
+    els.switchToLoginTextBtn.addEventListener("click", () => switchAuthTab("login"));
+    els.openSidebarBtn.addEventListener("click", () => setSidebarOpen(true));
+    els.closeSidebarBtn.addEventListener("click", () => setSidebarOpen(false));
+    els.backToContactsBtn.addEventListener("click", () => setSidebarOpen(true));
+
+    els.searchKeyword.addEventListener("input", () => {
+      loadContacts(els.searchKeyword.value.trim()).catch(() => {});
+    });
+    els.messageInput.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage().catch(error => notifyError(error, "发送失败"));
+      }
+    });
+    window.addEventListener("focus", () => {
+      if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        state.ws.send(JSON.stringify({ type: "read" }));
+      }
+    });
+    window.addEventListener("pointerdown", unlockAudioContext, { passive: true });
+    window.addEventListener("keydown", unlockAudioContext, { passive: true });
+    window.addEventListener("resize", () => {
+      syncMobileChatState();
+      if (state.token && window.innerWidth <= 980 && !state.activeContact) {
+        setSidebarOpen(true);
+      }
+    });
+
+    async function bootstrap() {
+      switchAuthTab("login");
+      if (!state.token) {
+        setScreen(false);
+        return;
+      }
+      try {
+        await loadProfile();
+        setScreen(true);
+        connectSSE();
+        await loadContacts();
+      } catch (error) {
+        if (!error || !error.handled) {
+          handleSessionExpired("登录状态已失效，请重新登录。");
+        }
+      }
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>

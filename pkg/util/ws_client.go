@@ -9,26 +9,54 @@ import (
 var webSocketClients sync.Map
 
 type WebSocketClient struct {
-	UserID int64
-	Conn   *websocket.Conn
+	UserID    int64
+	ContactID int64
+	Conn      *websocket.Conn
+	mu        sync.Mutex
 }
 
-func SetWebSocketClient(id int64, conn *websocket.Conn) {
-	webSocketClients.Store(id, &WebSocketClient{
-		UserID: id,
-		Conn:   conn,
-	})
+func (c *WebSocketClient) WriteJSON(v any) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.Conn.WriteJSON(v)
 }
 
-func GetWebSocketClient(id int64) *websocket.Conn {
+func (c *WebSocketClient) Close() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.Conn.Close()
+}
+
+func SetWebSocketClient(id, contactID int64, conn *websocket.Conn) *WebSocketClient {
+	client := &WebSocketClient{
+		UserID:    id,
+		ContactID: contactID,
+		Conn:      conn,
+	}
+	if oldClient := GetWebSocketClient(id); oldClient != nil {
+		_ = oldClient.Close()
+	}
+	webSocketClients.Store(id, client)
+	return client
+}
+
+func GetWebSocketClient(id int64) *WebSocketClient {
 	value, ok := webSocketClients.Load(id)
 	if !ok {
 		return nil
 	}
 	client := value.(*WebSocketClient)
-	return client.Conn
+	return client
 }
 
-func DeleteWebSocketClient(id int64) {
+func DeleteWebSocketClient(id int64, conn *websocket.Conn) {
+	value, ok := webSocketClients.Load(id)
+	if !ok {
+		return
+	}
+	client := value.(*WebSocketClient)
+	if conn != nil && client.Conn != conn {
+		return
+	}
 	webSocketClients.Delete(id)
 }

@@ -9,7 +9,15 @@ import (
 
 func GetAuthorizationByUsername(ctx context.Context, username string) (*model.Authorization, error) {
 	authorization := new(model.Authorization)
-	if err := sqlitecli.GetSqliteDB().WithContext(ctx).First(authorization, "username = ?", username).First(authorization).Error; err != nil {
+	if err := sqlitecli.GetSqliteDB().WithContext(ctx).Where("username = ?", username).First(authorization).Error; err != nil {
+		return nil, err
+	}
+	return authorization, nil
+}
+
+func GetAuthorizationByID(ctx context.Context, id int64) (*model.Authorization, error) {
+	authorization := new(model.Authorization)
+	if err := sqlitecli.GetSqliteDB().WithContext(ctx).Where("id = ?", id).First(authorization).Error; err != nil {
 		return nil, err
 	}
 	return authorization, nil

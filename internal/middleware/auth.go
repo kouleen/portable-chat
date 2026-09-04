@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kouleen/portable-chat/internal/model"
@@ -42,12 +43,19 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 		var authorization model.Authorization
-		if err := json.Unmarshal([]byte(userHeaderJson), &authorization); err != nil {
+		if err = json.Unmarshal([]byte(userHeaderJson), &authorization); err != nil {
+			utils.Error(c, http.StatusInternalServerError, "Unmarshal err")
+			c.Abort()
+			return
+		}
+		// 刷新时间
+		if err = storecli.Set(tokenString, userHeaderJson, time.Duration(24)*time.Hour); err != nil {
 			utils.Error(c, http.StatusInternalServerError, "Unmarshal err")
 			c.Abort()
 			return
 		}
 		ctx := utils.SetAuthorization(c.Request.Context(), &authorization)
+		ctx = utils.SetAuthorizationToken(ctx, tokenString)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}

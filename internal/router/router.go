@@ -14,24 +14,21 @@ func Register(r *gin.Engine) {
 
 	publicGroup := r.Group("/portable")
 	{
+		r.GET("/", WebHtml)
 		publicGroup.GET("/sendCode", handler.SendCode)
 		publicGroup.POST("/login", handler.Login)
 		publicGroup.GET("/exist", handler.Exist)
 		publicGroup.POST("/register", handler.Register)
-		r.GET("/", WebHtml)
 	}
 	rootGroup := publicGroup.Group("/root")
 	rootGroup.Use(middleware.Auth())
 	{
 		rootGroup.GET("/info", handler.Info)
-		rootGroup.GET("/page", handler.ListContact)
-		//rootGroup.GET("/refresh", api.RefreshAcme)
-		//rootGroup.GET("/download", api.DownloadAcme)
-		//rootGroup.POST("/create", api.CreateAcme)
-		//rootGroup.POST("/put", api.PutAcme)
-		//rootGroup.PUT("/updateAuto", api.UpdateAuto)
-		//rootGroup.PUT("/updateNotice", api.UpdateNotice)
-		//rootGroup.DELETE("/delete", api.DeleteAcme)
+		rootGroup.POST("/logout", handler.Logout)
+		rootGroup.GET("/contacts", handler.ListContact)
+		rootGroup.GET("/history", handler.ListHistory)
+		rootGroup.GET("/events", handler.StreamEvents)
+		rootGroup.GET("/ws", handler.ChatRoom)
 	}
 }
 
