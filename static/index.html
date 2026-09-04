@@ -749,6 +749,10 @@
     }
 
     @media (max-width: 640px) {
+      body {
+        overflow: auto;
+      }
+
       .toast-stack {
         top: 10px;
         left: 12px;
@@ -764,10 +768,30 @@
       .app-shell {
         width: 100%;
         min-height: 100vh;
-        height: 100vh;
         border-radius: 0;
         box-shadow: none;
         border: 0;
+      }
+
+      #authPage {
+        align-items: stretch;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #authPage .auth-shell {
+        min-height: 100svh;
+        height: auto;
+        overflow: visible;
+      }
+
+      #appPage {
+        padding: 0;
+      }
+
+      #appPage .app-shell {
+        height: 100svh;
+        overflow: hidden;
       }
 
       .auth-panel,
@@ -789,6 +813,11 @@
         max-width: none;
         padding: 14px;
         border-radius: 24px 24px 0 0;
+      }
+
+      .auth-panel {
+        align-items: stretch;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom));
       }
 
       .auth-heading h2 {
