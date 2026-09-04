@@ -1,0 +1,19 @@
+services:
+  portable-chat:
+    image: kouleen/portable-chat:latest
+    container_name: portable-chat
+    ports:
+      - "9191:9191"
+    environment:
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SEND_EMAIL=${SEND_EMAIL}
+      - SEND_PWD=${SEND_PWD}
+    volumes:
+      - ./portable-chat.db:/app/portable-chat.db
+    networks:
+      - portable-chat-network
+networks:
+  portable-chat-network:
+    driver: bridge
+    name: portable-chat-network
